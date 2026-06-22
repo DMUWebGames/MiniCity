@@ -1,86 +1,99 @@
-
 import * as THREE from 'three';
+import { Engine } from './Engine.js';
+import { Player, MAN, WOMAN } from './Player.js';
 
-const canvas = document.getElementById('gfx');
-const renderer = new THREE.WebGLRenderer({
-  canvas: canvas,
-  antialias: true
-});
+const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
 
-renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x87bdf0);
-
-const camera = new THREE.PerspectiveCamera(55,window.innerWidth / window.innerHeight,0.1,1000);
-camera.position.set(40, 45, 60);
-camera.lookAt(0, 0, 0);
-
-scene.add(new THREE.HemisphereLight(0xffffff, 0x445544, 1.0));
-
-const sun = new THREE.DirectionalLight(0xffffff, 0.9);
-sun.position.set(8, 14, 6);
-scene.add(sun);
-
-function createBox(width, height, depth, color) {
-  const material = new THREE.MeshLambertMaterial({ color });
-  const geometry = new THREE.BoxGeometry(width, height, depth);
-  return new THREE.Mesh(geometry, material);
-}
-
-const ground = createBox(220, 1, 220, 0x52733f);
-ground.position.y = -0.5;
-scene.add(ground);
-
-const roadPositions = [-40, -20, 0, 20, 40];
-
-for (const x of roadPositions) {
-  const road = createBox(8, 0.12, 200, 0x383a3e);
-  road.position.set(x, 0.06, 0);
-  scene.add(road);
-}
-
-for (const z of roadPositions) {
-  const road = createBox(200, 0.12, 8, 0x383a3e);
-  road.position.set(0, 0.06, z);
-  scene.add(road);
-}
-
-const palette = [0x8d8d99, 0x736b60, 0x9a6155, 0x5a8089, 0x80806b, 0x666b80];
-const blockCenters = [-30, -10, 10, 30];
-
-for (const bx of blockCenters) {
-  for (const bz of blockCenters) {
-    const buildingCount = 1 + Math.floor(Math.random() * 3);
-
-    for (let i = 0; i < buildingCount; i++) {
-      const width = 4 + Math.random() * 4;
-      const depth = 4 + Math.random() * 4;
-      const height = 5 + Math.random() * 16;
-      const color = palette[Math.floor(Math.random() * palette.length)];
-
-      const building = createBox(width, height, depth, color);
-      building.position.set(
-        bx + (Math.random() - 0.5) * 8,
-        height / 2,
-        bz + (Math.random() - 0.5) * 8
-      );
-
-      scene.add(building);
+export class MiniCity {
+  constructor(engine){
+    this.scene  = engine.scene;
+    this.camera = engine.camera;
+    this.buildWorld();
+    this.setupCamera(engine.renderer.domElement);
+  }
+  buildWorld(){
+    this.setCharacter(MAN);   
+    this.setupUI();
+    this.setupInput();
+    const ground = Engine.box(220,1,220,0x527342); 
+          ground.position.y=-0.5; 
+          this.scene.add(ground);
+    const lines=[-40,-20,0,20,40];
+    for(const x of lines){ 
+        const r=Engine.box(8,0.12,200,0x38383d); 
+              r.position.set(x,0.06,0); 
+              this.scene.add(r); }
+    for(const z of lines){ 
+        const r=Engine.box(200,0.12,8,0x38383d); 
+              r.position.set(0,0.06,z); 
+              this.scene.add(r); 
+                        }
+    const palette=[0x8d8d99,0x736b60,0x9a6155,0x5a8089,0x80806b,0x666b80], mids=[-30,-10,10,30];
+    for(const bx of mids) for(const bz of mids){
+      const n=1+(Math.random()*3|0);
+      for(let i=0;i<n;i++){ 
+        const w=5+Math.random()*5,d=5+Math.random()*5,h=14+Math.random()*45;
+        const b=Engine.box(w,h,d,palette[Math.random()*palette.length|0]);
+        b.position.set(bx+(Math.random()-.5)*8,h/2,bz+(Math.random()-.5)*8); 
+        this.scene.add(b); 
+                        }
     }
   }
+  setupCamera(canvas){
+    this.target=new THREE.Vector3(0,4,0);
+    this.cam={yaw: Math.PI,pitch:0.45,distance:14};
+    this.dragging =false;
+    let lx=0,ly=0;
+    canvas.addEventListener('pointerdown',e=>{this.dragging =true;lx=e.clientX;ly=e.clientY;});
+    canvas.addEventListener('pointermove',e=>{if(!this.dragging)return;
+      this.cam.yaw-=(e.clientX-lx)*0.005; this.cam.pitch=clamp(this.cam.pitch+(e.clientY-ly)*0.005,0.1,1.4);
+      lx=e.clientX;ly=e.clientY;});
+    canvas.addEventListener('pointerup',()=>this.dragging =false);
+    canvas.addEventListener('wheel',e=>{e.preventDefault();
+      this.cam.distance=clamp(this.cam.distance+Math.sign(e.deltaY)*6,20,160);},{passive:false});
+  }
+  updateCamera(){
+    const cp=Math.cos(this.cam.pitch),sp=Math.sin(this.cam.pitch);
+    this.camera.position.set(
+      this.target.x+this.cam.distance*cp*Math.sin(this.cam.yaw),
+      this.target.y+this.cam.distance*sp,
+      this.target.z+this.cam.distance*cp*Math.cos(this.cam.yaw));
+    this.camera.lookAt(this.target);
+  }
+  setCharacter(style){
+  if(this.player) this.scene.remove(this.player.group);  
+  this.player = new Player(style);                       
+  this.scene.add(this.player.group);
 }
-
-function animate() {
-  renderer.render(scene, camera);
-  requestAnimationFrame(animate);
+setupUI(){
+  document.getElementById('btnH').onclick = () => this.setCharacter(MAN);
+  document.getElementById('btnF').onclick = () => this.setCharacter(WOMAN);
 }
+setupInput(){
+  this.keys = {};
+  addEventListener('keydown', e => { this.keys[e.code] = true;
+    if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code)) e.preventDefault(); });
+  addEventListener('keyup', e => { this.keys[e.code] = false; });
+}
+ update(dt){
+  const k = this.keys;
+  const fwd  = (k['KeyW']||k['KeyZ']||k['ArrowUp']   ? 1:0) - (k['KeyS']||k['ArrowDown']        ? 1:0);
+  const str  = (k['KeyD']||k['ArrowLeft']           ? 1:0) - (k['KeyA']||k['KeyQ']||k['ArrowRight'] ? 1:0);
+  const jump = !!k['Space'];
 
-animate();
+  this.player.update(dt, fwd, str, jump, this.camera);
 
-window.addEventListener('resize', () => {
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-});
+   if((fwd !== 0 || str !== 0) && !this.dragging){
+    const want = this.player.group.rotation.y + Math.PI;
+    let d = want - this.cam.yaw;
+    while(d >  Math.PI) d -= 2*Math.PI;
+    while(d < -Math.PI) d += 2*Math.PI;
+    this.cam.yaw += d * Math.min(1, dt*4);
+  }
+
+  /**the camera follows the person */
+  const p = this.player.group.position;
+  this.target.set(p.x, p.y + 3, p.z);
+  this.updateCamera();
+}
+}
