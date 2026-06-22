@@ -41,10 +41,10 @@ export class Player {
     }
   }
  update(dt, fwd, turn, jump){
-  // tourner le perso (gauche/droite)
-  this.group.rotation.y += turn * 2.2 * dt;          // 2.2 = vitesse de rotation
+  /**turn the character (left/right) */
+  this.group.rotation.y += turn * 2.2 * dt;          
 
-  // avancer / reculer DANS la direction où il regarde
+  /**move forward / backward IN the direction he is looking */
   if(fwd !== 0){
     const yaw = this.group.rotation.y;
     this.group.position.x += Math.sin(yaw) * fwd * 7 * dt;
@@ -55,13 +55,13 @@ export class Player {
     this.amp += (0 - this.amp) * Math.min(1, dt * 10);
   }
 
-  // saut + gravité (inchangé)
+  /**jump + gravity (unchanged) */
   if(jump && this.grounded){ this.vy = 11; this.grounded = false; }
   this.vy -= 26 * dt;
   this.group.position.y += this.vy * dt;
   if(this.group.position.y <= 0){ this.group.position.y = 0; this.vy = 0; this.grounded = true; }
 
-  // animation de marche
+  /** walking event */
   const a = Math.sin(this.phase) * this.amp;
   this.legL.rotation.x =  a; this.legR.rotation.x = -a;
   this.armL.rotation.x = -a; this.armR.rotation.x =  a;
