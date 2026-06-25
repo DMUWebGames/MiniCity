@@ -15,9 +15,11 @@ export class MiniCity {
     this.lastX = 0;
     this.lastZ = 0;
     this.setupSpeedHUD();
-    this.timeLeft =20;
+    this.timeLeft =25;
     this.gameOver = false;
     this.setupTimerHUD();
+    this.goal = 3;
+    this.setupGoalHUD();
   }
  buildWorld(){
   this.setCharacter(MAN);
@@ -112,7 +114,7 @@ moveMarker(){
 }
 restart(){
   this.score = 0;
-  this.timeLeft = 20;
+  this.timeLeft = 25;
   this.gameOver = false;
   this.lostEl.style.display = 'none';      
   this.player.group.position.set(4, 0, 4); 
@@ -135,11 +137,43 @@ setupTimerHUD(){
     'font-size:24px;font-weight:bold;padding:10px 28px;border:0;border-radius:10px;' +
     'background:#fff;color:#000;cursor:pointer';
 
+    this.winEl = document.createElement('div');
+    this.winEl.style.cssText =
+    'position:fixed;inset:0;z-index:20;display:none;flex-direction:column;gap:20px;' +
+    'align-items:center;justify-content:center;background:#000a;' +
+    'color:#5dff8f;font-family:sans-serif;font-weight:900;text-align:center';
+    const wtxt = document.createElement('div');
+    wtxt.textContent = 'Congratulations! You have reached the next level';
+    wtxt.style.cssText = 'font-size:48px;max-width:80%';
+
+    const wbtn = document.createElement('button');
+    wbtn.textContent = 'Continue';
+    wbtn.style.cssText =
+    'font-size:24px;font-weight:bold;padding:10px 28px;border:0;border-radius:10px;' +
+    'background:#fff;color:#000;cursor:pointer';
+    wbtn.onclick = () => this.restart();
+
+   this.winEl.append(wtxt, wbtn);
+   document.body.appendChild(this.winEl);
+
     this.startEl.onclick = () => this.restart();
     this.lostEl.append( this.startEl);
 
     document.body.appendChild(this.lostEl);
 
+}
+setupGoalHUD(){
+  this.goalEl = document.createElement('div');
+  this.goalEl.style.cssText =
+    'position:fixed;top:12px;right:12px;z-index:10;color:#fff;' +
+    'font-family:sans-serif;font-weight:900;font-size:32px;text-shadow:0 2px 8px #000';
+  document.body.appendChild(this.goalEl);
+  this.updateGoal();
+}
+
+updateGoal(){
+  const left = this.goal - this.score;
+  this.goalEl.textContent = 'Deliveries left : ' + left;
 }
 
  update(dt){
@@ -175,7 +209,12 @@ this.speedEl.textContent = kmh + ' KM/H';
   if(Math.hypot(dx, dz) < 4){
     this.score++;
     this.moveMarker();
-    console.log('Deliveries :', this.score);
+     this.timeLeft = 25; 
+     this.updateGoal();
+    if(this.score >= this.goal){    
+    this.gameOver = true;
+    this.winEl.style.display = 'flex';
+  }
   }
 
   
@@ -184,7 +223,7 @@ this.speedEl.textContent = kmh + ' KM/H';
   this.target.set(p.x, p.y + 3, p.z);
 
   /**chrono*/
-this.timeLeft -= dt;
+this.timeLeft -= dt;  /**breakdown  */
 this.timerEl.textContent = Math.max(0, this.timeLeft).toFixed(1) + ' s';
 if(this.timeLeft <= 0){
   this.gameOver = true;
