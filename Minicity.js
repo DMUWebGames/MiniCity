@@ -15,6 +15,9 @@ export class MiniCity {
     this.lastX = 0;
     this.lastZ = 0;
     this.setupSpeedHUD();
+    this.timeLeft =20;
+    this.gameOver = false;
+    this.setupTimerHUD();
   }
  buildWorld(){
   this.setCharacter(MAN);
@@ -107,12 +110,45 @@ moveMarker(){
           Math.hypot(this.player.group.position.x - x, this.player.group.position.z - z) < 20);
   this.marker.position.set(x, 2.5, z);
 }
+restart(){
+  this.score = 0;
+  this.timeLeft = 20;
+  this.gameOver = false;
+  this.lostEl.style.display = 'none';      
+  this.player.group.position.set(4, 0, 4); 
+  this.moveMarker();                       
+}
+setupTimerHUD(){
+    this.timerEl = document.createElement('div');
+    this.timerEl.style.cssText = 'position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:10;color:#fff;' +
+    'font-family:sans-serif;font-weight:900;font-size:32px;text-shadow:0 2px 8px #000';
+    document.body.appendChild(this.timerEl);
+
+    this.lostEl = document.createElement('div');
+    this.lostEl.textContent = 'LOST';
+    this.lostEl.style.cssText = 'position:fixed;inset:0;z-index:20;display:none;place-items:center;' +
+    'background:#000a;color:#ff5555;font-family:sans-serif;font-weight:900;font-size:80px';
+
+    this.startEl =document.createElement('button');
+    this.startEl.textContent = 'Start';
+    this.startEl.style.cssText =
+    'font-size:24px;font-weight:bold;padding:10px 28px;border:0;border-radius:10px;' +
+    'background:#fff;color:#000;cursor:pointer';
+
+    this.startEl.onclick = () => this.restart();
+    this.lostEl.append( this.startEl);
+
+    document.body.appendChild(this.lostEl);
+
+}
 
  update(dt){
+  if(this.gameOver) return; 
   const k = this.keys;
   const fwd  = (k['KeyW']||k['KeyZ']||k['ArrowUp']   ? 1:0) - (k['KeyS']||k['ArrowDown']        ? 1:0);
   const str  = (k['KeyD']||k['ArrowLeft']           ? 1:0) - (k['KeyA']||k['KeyQ']||k['ArrowRight'] ? 1:0);
   const jump = !!k['Space'];
+   
 
   this.player.update(dt, fwd, str, jump, this.camera);
 
@@ -129,7 +165,7 @@ moveMarker(){
 
   /** speed = distance traveled / elapsed time */
 const moved = Math.hypot(p.x - this.lastX, p.z - this.lastZ);
-const kmh = dt > 0 ? Math.round((moved / dt) * 6) : 0;
+const kmh = dt > 0 ? Math.round((moved / dt) * 8) : 0;
 this.lastX = p.x;
 this.lastZ = p.z;
 this.speedEl.textContent = kmh + ' KM/H';
@@ -141,9 +177,19 @@ this.speedEl.textContent = kmh + ' KM/H';
     this.moveMarker();
     console.log('Deliveries :', this.score);
   }
+
+  
   this.marker.rotation.y += dt * 2;
 
   this.target.set(p.x, p.y + 3, p.z);
+
+  /**chrono*/
+this.timeLeft -= dt;
+this.timerEl.textContent = Math.max(0, this.timeLeft).toFixed(1) + ' s';
+if(this.timeLeft <= 0){
+  this.gameOver = true;
+  this.lostEl.style.display = 'grid';  
+}
   this.updateCamera();
 }
 }
