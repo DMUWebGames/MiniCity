@@ -8,20 +8,26 @@ export class MiniCity {
   constructor(engine){
     this.scene  = engine.scene;
     this.camera = engine.camera;
+    this.canevas = engine.renderer.domElement;
+
+    this.makeSky(); 
     this.buildWorld();
-    this.setupCamera(engine.renderer.domElement);
+    this.setupCamera(this.canevas);
     this.score = 0;
     this.setupMarker();
     this.lastX = 0;
     this.lastZ = 0;
     this.setupSpeedHUD();
-    this.timeLeft =25;
+    this.timeLeft =30;
     this.gameOver = false;
     this.setupTimerHUD();
-    this.goal = 3;
+    this.goal = 2;
     this.setupGoalHUD();
+     this.setupExtras(); 
+     
   }
  buildWorld(){
+  this.buildings = [];
   this.setCharacter(MAN);
   this.setupUI();
   this.setupInput();
@@ -49,10 +55,25 @@ export class MiniCity {
     const jx = (Math.random()*2 - 1) * (half - w/2);
     const jz = (Math.random()*2 - 1) * (half - d/2);
     b.position.set(bx + jx, h/2, bz + jz);
+    this.buildings.push({ x: bx + jx, z: bz + jz, hw: w/2, hd: d/2 });
 
     this.scene.add(b);
   }
 }
+makeSky(){
+  this.scene.background = new THREE.Color(0x87bdf0);
+  /**Sun */
+  const sun = new THREE.Mesh(
+    new THREE.SphereGeometry(14, 24, 24),
+    new THREE.MeshBasicMaterial({color: 0xffe066})
+  );
+  sun.position.set(120, 110, -160);
+  this.scene.add(sun);
+}
+
+setupExtras(){}
+updateExtras(dt){}
+
   setupCamera(canvas){
     this.target=new THREE.Vector3(0,4,0);
     this.cam={yaw: Math.PI,pitch:0.45,distance:14};
@@ -117,6 +138,7 @@ restart(){
   this.timeLeft = 25;
   this.gameOver = false;
   this.lostEl.style.display = 'none';      
+  this.winEl.style.display = 'none'; 
   this.player.group.position.set(4, 0, 4); 
   this.moveMarker();                       
 }
@@ -152,6 +174,7 @@ setupTimerHUD(){
     'font-size:24px;font-weight:bold;padding:10px 28px;border:0;border-radius:10px;' +
     'background:#fff;color:#000;cursor:pointer';
     wbtn.onclick = () => this.restart();
+    wbtn.onclick = () => { window.location.href = 'night.html'; };
 
    this.winEl.append(wtxt, wbtn);
    document.body.appendChild(this.winEl);
@@ -176,6 +199,18 @@ updateGoal(){
   this.goalEl.textContent = 'Deliveries left : ' + left;
 }
 
+resolveCollisions(){
+  const pr = 1.2;
+  const pos = this.player.group.position;
+  for(const b of this.buildings){
+    if(Math.abs(pos.x - b.x) < b.hw + pr &&
+       Math.abs(pos.z - b.z) < b.hd + pr){
+      pos.x = this.lastX;   
+      pos.z = this.lastZ;
+      return;
+    }
+  }
+}
  update(dt){
   if(this.gameOver) return; 
   const k = this.keys;
@@ -185,6 +220,7 @@ updateGoal(){
    
 
   this.player.update(dt, fwd, str, jump, this.camera);
+  this.resolveCollisions();
 
    if((fwd !== 0 || str !== 0) && !this.dragging){
     const want = this.player.group.rotation.y + Math.PI;
@@ -229,6 +265,9 @@ if(this.timeLeft <= 0){
   this.gameOver = true;
   this.lostEl.style.display = 'grid';  
 }
+  this.updateExtras(dt); 
   this.updateCamera();
 }
+
+
 }

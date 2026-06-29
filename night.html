@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>MiniCity</title>
+<style>
+  html, body { margin: 0; height: 100%; overflow: hidden; }
+  canvas { display: block; }
+  #ui { position: fixed; top: 12px; left: 12px; display: flex; gap: 8px; z-index: 10; }
+  #ui button { padding: 8px 14px; border: 0; border-radius: 8px; font-weight: 700; cursor: pointer; }
+</style>
+</head>
+<body>
+  <canvas id="gfx"></canvas>
+
+  <div id="ui">
+    <button id="btnH">Man</button>
+    <button id="btnF">Woman</button>
+  </div>
+
+  <script type="importmap">
+    { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
+  </script>
+  <script type="module" src="MainNight.js"></script>
+</body>
+</html>
