@@ -38,12 +38,12 @@ export class NightCity extends MiniCity {
     /** Cars */
     setupExtras(){
         this.cars = [];
-        const lines = [-60,-40,-20,0,20,40,60];
+        // const lines = [-60,-40,-20,0,20,40,60];
         for(let i=0;i<6;i++){
             const car = Engine.box(3,2,5,0xcc2222);
-            const lane = lines[Math.random()*lines.length|0];
-            if(Math.random() < 0.5){ car.position.set(-100,1,lane); car.userData={axis:'x'}; }
-            else                   { car.position.set(lane,1,-100); car.userData={axis:'z'}; }
+            const lane = this.lines[Math.random()*this.lines.length|0];
+            if(Math.random() < 0.5){ car.position.set(Math.random() * 200 - 100,1,lane); car.userData={axis:'x'}; }
+            else                   { car.position.set(lane,1,Math.random() * 200 - 100); car.userData={axis:'z'}; }
             this.scene.add(car);
             this.cars.push(car);
         }

@@ -4,45 +4,50 @@ import { Player, MAN, WOMAN } from './Player.js';
 
 const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
 
+
 export class MiniCity {
   constructor(engine){
     this.scene  = engine.scene;
     this.camera = engine.camera;
     this.canevas = engine.renderer.domElement;
-
+    this.size = 200;
+    this.lines = Array.from({length: this.size / 20}, (_, i) => (i-4) * 20);
+    console.log(this.lines );
+    
     this.makeSky(); 
-    this.buildWorld();
+    this.buildWorld(1000);
     this.setupCamera(this.canevas);
     this.score = 0;
     this.setupMarker();
     this.lastX = 0;
     this.lastZ = 0;
     this.setupSpeedHUD();
-    this.timeLeft =30;
+    this.timeLeft =60;
     this.gameOver = false;
     this.setupTimerHUD();
     this.goal = 2;
     this.setupGoalHUD();
-     this.setupExtras(); 
+    this.setupExtras(); 
+    this.setupMinimap();
      
   }
- buildWorld(){
+ buildWorld(size){
   this.buildings = [];
   this.setCharacter(MAN);
   this.setupUI();
   this.setupInput();
 
-  const ground = Engine.box(220,1,220,0x527342);
+  const ground = Engine.box(size,1,size,0x527342);
   ground.position.y = -0.5;
   this.scene.add(ground);
 
-  const lines = [-60,-40,-20,0,20,40,60];
+ 
   const roadW = 10;
-  for(const x of lines){ const r=Engine.box(roadW,0.14,200,0x38383d); r.position.set(x,0.06,0); this.scene.add(r); }
-  for(const z of lines){ const r=Engine.box(200,0.14,roadW,0x38383d); r.position.set(0,0.06,z); this.scene.add(r); }
+  for(const x of this.lines){ const r=Engine.box(roadW,0.14,this.size,0x38383d); r.position.set(x,0.06,0); this.scene.add(r); }
+  for(const z of this.lines){ const r=Engine.box(this.size,0.14,roadW,0x38383d); r.position.set(0,0.06,z); this.scene.add(r); }
 
   const palette = [0x8d8d99,0x736b60,0x9a6155,0x5a8089,0x80806b,0x666b80];
-  const mids = [-50,-30,-10,10,30,50];
+  const mids = [-90,-70,-50,-30,-10,10,30,50,70,90];
   const half = (20 - roadW) / 2;         
 
   for(const bx of mids) for(const bz of mids){
@@ -85,7 +90,7 @@ updateExtras(dt){}
       lx=e.clientX;ly=e.clientY;});
     canvas.addEventListener('pointerup',()=>this.dragging =false);
     canvas.addEventListener('wheel',e=>{e.preventDefault();
-      this.cam.distance=clamp(this.cam.distance+Math.sign(e.deltaY)*6,20,160);},{passive:false});
+      this.cam.distance=clamp(this.cam.distance + Math.sign(e.deltaY)*6,20,160);},{passive:false});
   }
   updateCamera(){
     const cp=Math.cos(this.cam.pitch),sp=Math.sin(this.cam.pitch);
@@ -124,18 +129,18 @@ setupMarker(){
 }
 
 moveMarker(){
-  const lines = [-60,-40,-20,0,20,40,60];
+ 
   let x, z;
   do {
-    x = lines[Math.random()*lines.length|0];
-    z = lines[Math.random()*lines.length|0];
+    x = this.lines[Math.random()*this.lines.length|0];
+    z = this.lines[Math.random()*this.lines.length|0];
   } while(this.player &&
           Math.hypot(this.player.group.position.x - x, this.player.group.position.z - z) < 20);
   this.marker.position.set(x, 2.5, z);
 }
 restart(){
   this.score = 0;
-  this.timeLeft = 25;
+  this.timeLeft = 60;
   this.gameOver = false;
   this.lostEl.style.display = 'none';      
   this.winEl.style.display = 'none'; 
@@ -211,6 +216,40 @@ resolveCollisions(){
     }
   }
 }
+
+setupMinimap(){
+  this.mapCanvas = document.createElement('canvas');
+  this.mapCanvas.width = 160;
+  this.mapCanvas.height = 160;
+  this.mapCanvas.style.cssText =
+    'position:fixed;bottom:16px;left:16px;z-index:10;' +
+    'border:2px solid #fff;border-radius:8px;background:#0008';
+  document.body.appendChild(this.mapCanvas);
+  this.mapCtx = this.mapCanvas.getContext('2d');
+
+}
+drawMinimap(){
+  const ctx = this.mapCtx;
+  const S = 160;
+  const WORLD = this.size;
+  ctx.clearRect(0, 0, S, S);
+  /** converts a position in world space (x, z) to pixel coordinates on the minimap */
+  const toMap = (x,z) =>({
+    px:(x/WORLD + 0.5) * S,
+    py: (z / WORLD + 0.5) * S
+  });
+
+  const m = toMap(this.marker.position.x,this.marker.position.z);
+  ctx.fillStyle = '#ffd433';
+  ctx.beginPath(); ctx.arc(m.px, m.py, 5, 0, 7); ctx.fill();
+
+  const p = toMap(this.player.group.position.x, this.player.group.position.z);
+  ctx.fillStyle = '#3aa0ff';
+  ctx.beginPath(); ctx.arc(p.px, p.py, 5, 0, 7); ctx.fill();
+
+}
+
+
  update(dt){
   if(this.gameOver) return; 
   const k = this.keys;
@@ -231,7 +270,7 @@ resolveCollisions(){
   }
 
   /**the camera follows the person */
-  const p = this.player.group.position;
+const p = this.player.group.position;
 
   /** speed = distance traveled / elapsed time */
 const moved = Math.hypot(p.x - this.lastX, p.z - this.lastZ);
@@ -267,6 +306,7 @@ if(this.timeLeft <= 0){
 }
   this.updateExtras(dt); 
   this.updateCamera();
+  this.drawMinimap();
 }
 
 
