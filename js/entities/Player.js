@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { box } from './MeshFactory.js';
+import { box } from '../core/MeshFactory.js';
 
 /**two predefined characters (just data: colors + options) */
 export const MAN = { skin:0xf5cc30, torso:0x0e85c6, legs:0x4d9e45, hair:0x4a2f1a, longHair:false, skirt:false };

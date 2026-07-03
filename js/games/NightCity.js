@@ -1,6 +1,6 @@
 ﻿import * as THREE from 'three';
 import { MiniCity } from './Minicity.js';
-import { box } from './MeshFactory.js';
+import { box } from '../core/MeshFactory.js';
 
 export class NightCity extends MiniCity {
   makeSky() {

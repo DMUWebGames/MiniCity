@@ -1,19 +1,26 @@
 ﻿import * as THREE from 'three';
-import { box } from './MeshFactory.js';
-import { Player, MAN, WOMAN } from './Player.js';
-import { HUD } from './HUD.js';
-import { Minimap } from './Minimap.js';
-import { BaseGame } from './BaseGame.js';
+import { box } from '../core/MeshFactory.js';
+import { Player, MAN, WOMAN } from '../entities/Player.js';
+import { HUD } from '../ui/HUD.js';
+import { Minimap } from '../ui/Minimap.js';
+import { BaseGame } from '../core/BaseGame.js';
+import { Bird } from '../entities/Bird.js';
+import { City } from '../entities/City.js';
 
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 
 export class MiniCity extends BaseGame {
-  constructor(engine) {
+  constructor(engine,nRoads=10,roadWidth=10,blockSize=20) {
     super();
     this.initialize(engine);
     this.canvas = engine.renderer.domElement;
-    this.size = 200;
-    this.lines = Array.from({ length: this.size / 20 }, (_, i) => (i - 4) * 20);
+
+    this.nRoads = nRoads;
+    this.roadWidth = roadWidth;
+    this.blockSize = blockSize;
+    this.size = this.nRoads*this.roadWidth + (this.nRoads - 1) * this.blockSize;
+   
+    this.lines = Array.from({ length: this.size / this.blockSize }, (_, i) => (i - this.nRoads / 2) * this.blockSize);
     this.score = 0;
     this.timeLeft = 60;
     this.goal = 2;
@@ -40,40 +47,10 @@ export class MiniCity extends BaseGame {
     this.setCharacter(MAN);
     this.setupUI();
     this.setupInput();
+    const city = new City(this.scene,this.lines,this.size,this.roadWidth,this.blockSize);
 
-    const ground = box(this.size, 1, this.size, 0x527342);
-    ground.position.y = -0.5;
-    this.scene.add(ground);
 
-    const roadW = 10;
-    for (const x of this.lines) {
-      const road = box(roadW, 0.14, this.size, 0x38383d);
-      road.position.set(x, 0.06, 0);
-      this.scene.add(road);
-    }
-    for (const z of this.lines) {
-      const road = box(this.size, 0.14, roadW, 0x38383d);
-      road.position.set(0, 0.06, z);
-      this.scene.add(road);
-    }
-
-    const palette = [0x8d8d99, 0x736b60, 0x9a6155, 0x5a8089, 0x80806b, 0x666b80];
-    const mids = [-90, -70, -50, -30, -10, 10, 30, 50, 70, 90];
-    const half = (20 - roadW) / 2;
-
-    for (const bx of mids) {
-      for (const bz of mids) {
-        const w = 4 + Math.random() * 5;
-        const d = 4 + Math.random() * 5;
-        const h = 14 + Math.random() * 45;
-        const building = box(w, h, d, palette[Math.floor(Math.random() * palette.length)]);
-        const jx = (Math.random() * 2 - 1) * (half - w / 2);
-        const jz = (Math.random() * 2 - 1) * (half - d / 2);
-        building.position.set(bx + jx, h / 2, bz + jz);
-        this.buildings.push({ x: bx + jx, z: bz + jz, hw: w / 2, hd: d / 2 });
-        this.scene.add(building);
-      }
-    }
+   
   }
 
   makeSky() {
@@ -87,8 +64,17 @@ export class MiniCity extends BaseGame {
     this.scene.add(sun);
   }
 
-  setupExtras() {}
-  updateExtras(dt) {}
+ setupExtras(){
+  this.birds = [];
+  for(let i=0; i<30; i++){
+    const bird = new Bird();
+    this.scene.add(bird.group);
+    this.birds.push(bird);
+  }
+}
+updateExtras(dt){
+  for(const bird of this.birds) bird.update(dt);
+}
 
   setupCamera(canvas) {
     this.target = new THREE.Vector3(0, 4, 0);
@@ -220,7 +206,7 @@ export class MiniCity extends BaseGame {
 
     const k = this.keys;
     const forward = (k['KeyW'] || k['KeyZ'] || k['ArrowUp'] ? 1 : 0) - (k['KeyS'] || k['ArrowDown'] ? 1 : 0);
-    const turn = (k['KeyD'] || k['ArrowRight'] ? 1 : 0) - (k['KeyA'] || k['KeyQ'] || k['ArrowLeft'] ? 1 : 0);
+    const turn = (k['KeyD'] || k['ArrowLeft'] ? 1 : 0) - (k['KeyA'] || k['KeyQ'] || k['ArrowRight'] ? 1 : 0);
     const jump = !!k['Space'];
 
     this.player.update(dt, forward, turn, jump);
