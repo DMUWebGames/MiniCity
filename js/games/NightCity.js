@@ -1,6 +1,7 @@
 ﻿import * as THREE from 'three';
 import { MiniCity } from './Minicity.js';
 import { box } from '../core/MeshFactory.js';
+import {City} from '../entities/City.js';
 
 export class NightCity extends MiniCity {
   makeSky() {
@@ -41,7 +42,7 @@ export class NightCity extends MiniCity {
     this.cars = [];
     for (let i = 0; i < 6; i++) {
       const car = box(3, 2, 5, 0xcc2222);
-      const lane = this.lines[Math.floor(Math.random() * this.lines.length)];
+      const lane = this.city.lines[Math.floor(Math.random() * this.city.lines.length)];
       if (Math.random() < 0.5) {
         car.position.set(Math.random() * 200 - 100, 1, lane);
         car.userData = { axis: 'x' };

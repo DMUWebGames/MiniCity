@@ -18,24 +18,24 @@ export class MiniCity extends BaseGame {
     this.nRoads = nRoads;
     this.roadWidth = roadWidth;
     this.blockSize = blockSize;
-    this.size = this.nRoads*this.roadWidth + (this.nRoads - 1) * this.blockSize;
    
-    this.lines = Array.from({ length: this.size / this.blockSize }, (_, i) => (i - this.nRoads / 2) * this.blockSize);
-    this.score = 0;
+   this.score = 0;
     this.timeLeft = 60;
     this.goal = 2;
     this.hud = new HUD();
-    this.minimap = new Minimap(this.size);
+    
 
     this.makeSky();
     this.buildWorld();
     this.setupExtras();
     this.setupCamera(this.canvas);
     this.setupMarker();
+    console.log(this.goal , this.score);
     this.hud.updateGoal(this.goal - this.score);
     this.hud.updateTime(this.timeLeft);
     this.lastX = this.player.group.position.x;
     this.lastZ = this.player.group.position.z;
+    this.minimap = new Minimap(this.city.size);
   }
 
   initialize(engine) {
@@ -43,14 +43,10 @@ export class MiniCity extends BaseGame {
   }
 
   buildWorld() {
-    this.buildings = [];
-    this.setCharacter(MAN);
     this.setupUI();
     this.setupInput();
-    const city = new City(this.scene,this.lines,this.size,this.roadWidth,this.blockSize);
-
-
-   
+    this.city = new City(this.scene,this.nRoads,this.roadWidth,this.blockSize);
+    this.setCharacter(MAN);
   }
 
   makeSky() {
@@ -125,7 +121,8 @@ updateExtras(dt){
   setCharacter(style) {
     if (this.player) this.scene.remove(this.player.group);
     this.player = new Player(style);
-    this.player.group.position.set(4, 0, 4);
+    const [x, z] = this.city.playerSpawnPosition();
+    this.player.group.position.set(x, 0, z);
     this.scene.add(this.player.group);
     this.lastX = this.player.group.position.x;
     this.lastZ = this.player.group.position.z;
@@ -162,8 +159,7 @@ updateExtras(dt){
     let x;
     let z;
     do {
-      x = this.lines[Math.floor(Math.random() * this.lines.length)];
-      z = this.lines[Math.floor(Math.random() * this.lines.length)];
+      [x, z] = this.city.randomPosition();
     } while (
       this.player &&
       Math.hypot(this.player.group.position.x - x, this.player.group.position.z - z) < 20
@@ -187,15 +183,17 @@ updateExtras(dt){
 
   resolveCollisions() {
     const pushRadius = 1.2;
-    const pos = this.player.group.position;
+    const playerPos = this.player.group.position;
 
-    for (const building of this.buildings) {
+    for (const building of this.city.buildings) {
+      // const buildingPos = building.position;
+
       if (
-        Math.abs(pos.x - building.x) < building.hw + pushRadius &&
-        Math.abs(pos.z - building.z) < building.hd + pushRadius
+        Math.abs(playerPos.x - building.x) < building.hw + pushRadius &&
+        Math.abs(playerPos.z - building.z) < building.hd + pushRadius
       ) {
-        pos.x = this.lastX;
-        pos.z = this.lastZ;
+        playerPos.x = this.lastX;
+        playerPos.z = this.lastZ;
         return;
       }
     }

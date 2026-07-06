@@ -74,6 +74,7 @@ export class HUD {
 
   updateGoal(left) {
     this.goalEl.textContent = `Deliveries left : ${left}`;
+    console.log(`Deliveries left : ${left}`); // Log the deliveries left to the console
   }
 
   showWin(onContinue) {
