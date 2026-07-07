@@ -45,10 +45,9 @@ export class City {
         const depth = (minSize + Math.random() * (maxSize - minSize)) * block.size;
         const x = block.x + (block.size - width) * (Math.random() - 0.5);
         const z = block.z + (block.size - depth) * (Math.random() - 0.5);
-        const height = 0.1 + Math.random() * 0.4 * this.size;
+        const height = 0.1 + Math.random() * 0.25 * this.size;
         return new Building(x, z, width, height, depth, this.randomColour());
-        // return building;
-        // // return {mesh:building, x, z,hw:width/2, hd:depth/2};
+        
     }
 
     build() {

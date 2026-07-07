@@ -75,4 +75,41 @@ export class NightCity extends MiniCity {
       }
     }
   }
-}
+  startFlight() {
+    this.flying = true ;
+    this.flightTime = 0;
+    this.gameOver = true;
+
+       const wingMat = new THREE.MeshBasicMaterial({ color:0xffffcc,transparent:true,opacity: 0.9,side: THREE.DoubleSide  });
+
+      this.leftWing = new THREE.Mesh( new THREE.PlaneGeometry(2,4),wingMat );
+        this.leftWing.position.set(-1.2,2,-0.4);
+     
+        this.rightWing = new THREE.Mesh( new THREE.PlaneGeometry(2,4), wingMat );
+        this.rightWing.position.set(1.2,2,-0.4);
+
+        this.player.group.add(this.rightWing, this.leftWing);
+
+  }
+  updateFlight(dt) {
+    this.flightTime += dt;
+    const flap = Math.sin(this.flightTime*10)*0.5;
+    this.leftWing.rotation.x = flap;
+    this.rightWing.rotation.x = -flap;
+    
+    this.player.group.position.y += dt*(4 + this.flightTime*3); 
+    this.target.set(this.player.group.position.x, this.player.group.position.y + 3, this.player.group.position.z);
+    this.updateCamera();
+    if(this.flightTime > 10) {
+     window.location.href = 'level3.html';
+    }
+  }
+  onWin() {  this.startFlight();  }
+  update(dt) {
+    if(this.flying) {
+      this.updateFlight(dt);
+    }
+    super.update(dt);
+    this.updateExtras(dt);
+   
+  }}

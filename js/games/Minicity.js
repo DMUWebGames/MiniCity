@@ -21,7 +21,7 @@ export class MiniCity extends BaseGame {
    
    this.score = 0;
     this.timeLeft = 60;
-    this.goal = 2;
+    this.goal = 1;
     this.hud = new HUD();
     
 
@@ -62,7 +62,7 @@ export class MiniCity extends BaseGame {
 
  setupExtras(){
   this.birds = [];
-  for(let i=0; i<30; i++){
+  for(let i=0; i < 30; i++){
     const bird = new Bird();
     this.scene.add(bird.group);
     this.birds.push(bird);
@@ -198,6 +198,11 @@ updateExtras(dt){
       }
     }
   }
+  onWin() {
+    this.hud.showWin(() => {
+          window.location.href = 'level2.html';
+        });
+      }
 
   update(dt) {
     if (this.gameOver) return;
@@ -233,9 +238,7 @@ updateExtras(dt){
       this.hud.updateGoal(this.goal - this.score);
       if (this.score >= this.goal) {
         this.gameOver = true;
-        this.hud.showWin(() => {
-          window.location.href = 'night.html';
-        });
+        this.onWin();
       }
     }
 
