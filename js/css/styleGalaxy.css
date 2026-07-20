@@ -1,0 +1,4 @@
+
+  * { margin:0; padding:0; }
+  html,body { height:100%; overflow:hidden; background:#000; }
+  #gfx { position:fixed; inset:0; width:100%; height:100%; display:block; }

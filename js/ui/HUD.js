@@ -72,9 +72,9 @@ export class HUD {
     this.timerEl.textContent = `${Math.max(0, seconds).toFixed(1)} s`;
   }
 
-  updateGoal(left) {
+  updateGoal(left, label = 'Deliveries left') {
     this.goalEl.textContent = `Deliveries left : ${left}`;
-    console.log(`Deliveries left : ${left}`); // Log the deliveries left to the console
+ 
   }
 
   showWin(onContinue) {

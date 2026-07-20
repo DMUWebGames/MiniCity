@@ -2,6 +2,7 @@
 import { MiniCity } from './Minicity.js';
 import { box } from '../core/MeshFactory.js';
 import {City} from '../entities/City.js';
+import {Camera} from '../core/Camera.js';
 
 export class NightCity extends MiniCity {
   makeSky() {
@@ -98,8 +99,8 @@ export class NightCity extends MiniCity {
     this.rightWing.rotation.x = -flap;
     
     this.player.group.position.y += dt*(4 + this.flightTime*3); 
-    this.target.set(this.player.group.position.x, this.player.group.position.y + 3, this.player.group.position.z);
-    this.updateCamera();
+    this.camera.setTarget(this.player.group.position.x, this.player.group.position.y + 3, this.player.group.position.z);
+    this.camera.updateCamera();
     if(this.flightTime > 10) {
      window.location.href = 'level3.html';
     }
@@ -112,4 +113,6 @@ export class NightCity extends MiniCity {
     super.update(dt);
     this.updateExtras(dt);
    
-  }}
+  }
+   
+}

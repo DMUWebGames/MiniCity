@@ -6,6 +6,7 @@ import { Minimap } from '../ui/Minimap.js';
 import { BaseGame } from '../core/BaseGame.js';
 import { Bird } from '../entities/Bird.js';
 import { City } from '../entities/City.js';
+import { Camera } from '../core/Camera.js';
 
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 
@@ -18,19 +19,18 @@ export class MiniCity extends BaseGame {
     this.nRoads = nRoads;
     this.roadWidth = roadWidth;
     this.blockSize = blockSize;
-   
-   this.score = 0;
+    this.score = 0;
     this.timeLeft = 60;
     this.goal = 1;
     this.hud = new HUD();
+  
     
 
     this.makeSky();
     this.buildWorld();
     this.setupExtras();
-    this.setupCamera(this.canvas);
+    this.camera = new Camera(engine, this.canvas);
     this.setupMarker();
-    console.log(this.goal , this.score);
     this.hud.updateGoal(this.goal - this.score);
     this.hud.updateTime(this.timeLeft);
     this.lastX = this.player.group.position.x;
@@ -72,51 +72,7 @@ updateExtras(dt){
   for(const bird of this.birds) bird.update(dt);
 }
 
-  setupCamera(canvas) {
-    this.target = new THREE.Vector3(0, 4, 0);
-    this.cam = { yaw: Math.PI, pitch: 0.45, distance: 14 };
-    this.dragging = false;
-    let lastX = 0;
-    let lastY = 0;
-
-    canvas.addEventListener('pointerdown', (event) => {
-      this.dragging = true;
-      lastX = event.clientX;
-      lastY = event.clientY;
-    });
-
-    canvas.addEventListener('pointermove', (event) => {
-      if (!this.dragging) return;
-      this.cam.yaw -= (event.clientX - lastX) * 0.005;
-      this.cam.pitch = clamp(this.cam.pitch + (event.clientY - lastY) * 0.005, 0.1, 1.4);
-      lastX = event.clientX;
-      lastY = event.clientY;
-    });
-
-    canvas.addEventListener('pointerup', () => {
-      this.dragging = false;
-    });
-
-    canvas.addEventListener(
-      'wheel',
-      (event) => {
-        event.preventDefault();
-        this.cam.distance = clamp(this.cam.distance + Math.sign(event.deltaY) * 6, 20, 160);
-      },
-      { passive: false }
-    );
-  }
-
-  updateCamera() {
-    const cp = Math.cos(this.cam.pitch);
-    const sp = Math.sin(this.cam.pitch);
-    this.camera.position.set(
-      this.target.x + this.cam.distance * cp * Math.sin(this.cam.yaw),
-      this.target.y + this.cam.distance * sp,
-      this.target.z + this.cam.distance * cp * Math.cos(this.cam.yaw)
-    );
-    this.camera.lookAt(this.target);
-  }
+ 
 
   setCharacter(style) {
     if (this.player) this.scene.remove(this.player.group);
@@ -215,12 +171,12 @@ updateExtras(dt){
     this.player.update(dt, forward, turn, jump);
     this.resolveCollisions();
 
-    if ((forward !== 0 || turn !== 0) && !this.dragging) {
+    if ((forward !== 0 || turn !== 0) && !this.camera.dragging) {
       const desired = this.player.group.rotation.y + Math.PI;
-      let delta = desired - this.cam.yaw;
+      let delta = desired - this.camera.cam.yaw;
       while (delta > Math.PI) delta -= 2 * Math.PI;
       while (delta < -Math.PI) delta += 2 * Math.PI;
-      this.cam.yaw += delta * Math.min(1, dt * 4);
+      this.camera.cam.yaw += delta * Math.min(1, dt * 4);
     }
 
     const position = this.player.group.position;
@@ -243,7 +199,7 @@ updateExtras(dt){
     }
 
     this.marker.rotation.y += dt * 2;
-    this.target.set(position.x, position.y + 3, position.z);
+
 
     this.timeLeft -= dt;
     this.hud.updateTime(this.timeLeft);
@@ -253,7 +209,10 @@ updateExtras(dt){
     }
 
     this.updateExtras(dt);
-    this.updateCamera();
+    this.camera.setTarget(position.x, position.y + 3, position.z);
+    this.camera.updateCamera();
     this.minimap.draw(position, this.player.group.rotation.y, this.marker.position);
+    
+   
   }
 }
