@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Part 3: Galactic Runner</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    html,body{height:100%;overflow:hidden;background:#000;
+      font-family:"Segoe UI",system-ui,sans-serif;color:#fff}
+    #gfx{position:fixed;inset:0;width:100%;height:100%;display:block}
+    .hint{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);z-index:10;
+      font-size:13px;color:#cfd6ff;background:#0e1430cc;padding:8px 16px;border-radius:999px}
+    .hint b{color:#9fe8ff}
+  </style>
+</head>
+<body>
+  <canvas id="gfx"></canvas>
+
+  <div class="hint">
+    <b>Flèches</b> ou <b>ZQSD</b> pour esquiver ·
+    attrape les <b>planètes colorées</b> · évite les <b>planètes sombres</b>
+  </div>
+
+  <script type="importmap">
+    { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
+  </script>
+  <script type="module" src="MainLevel3.js"></script>
+</body>
+</html>

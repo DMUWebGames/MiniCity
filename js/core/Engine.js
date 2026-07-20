@@ -10,12 +10,6 @@ export class Engine {
 
     this.camera = new THREE.PerspectiveCamera(55, innerWidth/innerHeight, 0.1, 1000);
 
-    this.scene.add(new THREE.HemisphereLight(0xffffff, 0x445544, 1.0));
-    const sun = new THREE.DirectionalLight(0xffffff, 1.1);
-    sun.position.set(8, 14, 6);
-    this.scene.add(sun);
-    
-
     this.resize();
     addEventListener('resize', () => this.resize());
     this.last = 0;
@@ -25,10 +19,6 @@ export class Engine {
     this.renderer.setSize(innerWidth, innerHeight);
     this.camera.aspect = innerWidth/innerHeight;
     this.camera.updateProjectionMatrix();
-  }
-
-  static box(w, h, d, color){
-    return new THREE.Mesh(new THREE.BoxGeometry(w, h, d), new THREE.MeshLambertMaterial({ color }));
   }
 
   start(game){
